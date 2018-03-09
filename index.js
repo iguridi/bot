@@ -6,18 +6,30 @@ const TelegramBot = require('node-telegram-bot-api');
 const Db = require('./dbhelper');
 let db = new Db();
 
-db.open();
-db.createTable();
 
 
 // Be sure to replace YOUR_BOT_TOKEN with your actual bot token on this line.
-bot = new TelegramBot("486635226:AAEHlZe4KGZSauh2jHDHBpQrvN3nQQr9-oc", 
-    { polling: true });
+bot = new TelegramBot("557812973:AAErUFUcBv297MVR58yPwhLjM2DoQmHCaNY", { polling: true });
+
+var tableName = 'list';
+db.open();
+
+/* 
+start
+*/
+bot.onText(/\/start/, (msg) => {
+    const chatId = msg.chat.id;
+    let id = chatId.toString().replace('-', '');
+    // tableName += chatId;
+    console.log(tableName + id);
+    db.createTable(tableName + id);
+    bot.sendMessage(chatId, "Hello");
+});
 
 
 // Matches "/add [whatever]"
 bot.onText(/\/add (.+)/, add);
-bot.onText(/\/*falta (.+)/, add);
+bot.onText(/\/[a-z]*falta[a-z]* (.+)/, add);
 
 
 function addProduct(chatId, items) {
@@ -25,8 +37,6 @@ function addProduct(chatId, items) {
         const a = [];
         for( let i in items ) {
             let item = items[i];
-            // here we handle the word format
-            // item = items[i].trim().toLowerCase();
             if (err) {
                 throw err;
             }
@@ -36,17 +46,18 @@ function addProduct(chatId, items) {
             }
             console.log(b);
             if( b.includes(item) ) {
-                bot.sendMessage(chatId, 'Ya sé que falta(n) ' + item + ', gracias');
-                // bot.sendMessage(chatId, 'Product ' + item + ' already added');
+                // bot.sendMessage(chatId, 'Ya sé que falta(n) ' + item + ', gracias');
+                bot.sendMessage(chatId, 'Product ' + item + ' already added');
             } else {
-                db.insert(item);
+                console.log(tableName, chatId);
+                db.insert(tableName + chatId.toString().replace('-', ''), item);
                 a.push(item);
                 // bot.sendMessage(chatId, 'Product ' +  item  + ' added');
             }
         }
         if( a.length > 0 ) {
-            bot.sendMessage(chatId, 'Ya');
-            // bot.sendMessage(chatId, 'Product(s) ' +  a.join(', ')  + ' added');
+            // bot.sendMessage(chatId, 'Ya');
+            bot.sendMessage(chatId, 'Product(s) ' +  a.join(', ')  + ' added');
         }
     };
 }
@@ -61,45 +72,55 @@ function removeDuplicates(list) {
 
 
 function add(msg, match) {
-     // 'msg' is the received Message from Telegram
+    // 'msg' is the received Message from Telegram
     // 'match' is the result of executing the regexp above on the text content
     // of the message
-
+    
     const chatId = msg.chat.id;
     if( match[1] !== undefined ) {
-        let items = match[1].split(',').map((s) => s.trim().toLowerCase());
-
+        // here we handle the word format
+        let items = match[1].split(',').map((s) => s.trim().toLowerCase());        
         items = removeDuplicates(items);
-        // console.log(items);
-        // var items = removeDuplicates(match[1].split(','));
-        db.getList(addProduct(chatId, items));
+
+        db.getList(tableName + chatId.toString().replace('-', ''), addProduct(chatId, items));
     }
 }
 
 
-bot.onText(/\/removeall/, (msg) => {
-    db.dropTable();
-    db.createTable();
+function removeall(msg) {
     const chatId = msg.chat.id;
+    db.dropTable(tableName + chatId.toString().replace('-', ''));
+    db.createTable(tableName + chatId.toString().replace('-', ''));
+    // bot.sendMessage(chatId, 'Lista vaciada');
     bot.sendMessage(chatId, 'List emptied');
-});
+}
 
-bot.onText(/\/remove(.*)/, (msg, match) => {
-    const chatId = msg.chat.id; 
-    console.log(match[1], 'shit');
-    if( match[1] !== '' ) {
+
+bot.onText(/\/removeall/, removeall);
+bot.onText(/\/borrartodo/, removeall);
+
+
+function remove(msg, match) {
+    const chatId = msg.chat.id.toString();
+    // console.log(match[1], 'shit');
+    if (match[1] !== '') {
         let items = match[1].split(',').map((s) => s.trim().toLowerCase());
-        for( let i in items ) {
-            db.delete(items[i]);
+        for (let i in items) {
+            db.delete(tableName + chatId.toString().replace('-', ''), items[i]);
+
         }
-        bot.sendMessage(chatId, 'Item(s) ' + items.join(', ') +' removed');
+        // bot.sendMessage(chatId, 'Producto(s) ' + items.join(', ') + ' borrado(s) de la lista');
+        bot.sendMessage(chatId, 'Item(s) ' + items.join(', ') + ' removed');
     } else {
         // console.log('No item specified');
+        // bot.sendMessage(chatId, 'Que producto');
         bot.sendMessage(chatId, 'No item specified');
     }
-    
-});
-// bot.onText(/\/listo/, (msg, match) => {
+
+}
+
+bot.onText(/\/remove (.*)/, remove);
+bot.onText(/\/borrar (.*)/, remove);
 
 
 
@@ -112,8 +133,10 @@ function showList(msg) {
 
         const chatId = msg.chat.id;
         var resp = "List:\n";
+        // var resp = "List:\n";
 
         if( list.length === 0 ) {
+            // resp = "Lista vacía";
             resp = "Empty list";
         } else {
             for( let i in list ) {
@@ -126,35 +149,7 @@ function showList(msg) {
 
 
 bot.onText(/\/list/, (msg) => {
-    // console.log('blabla');
-    db.getList(showList(msg));
-    // let list = db.blu();
-    // console.log(list, 'lablabla');
-
-    // const chatId = msg.chat.id;
-    // var resp = "List:\n";
-
-    // if( list.length === 0 ) {
-    //     resp = "Empty list";
-    // } else {
-    //     for( i in list ) {
-    //         resp += "- " + list[i] + "\n";
-    //     }
-    // }
-    // bot.sendMessage(chatId, resp); //, {parse_mode: "HTML"});
+    const chatId = msg.chat.id;     
+    db.getList(tableName + chatId.toString().replace('-', ''), showList(msg));
 });
 
-
-
-
-// bot.on('polling_error', (error) => {
-//   console.log(error.response.body);  // => 'EFATAL'
-// });
-
-// show the values stored
-// for (var k in h) {
-//     // use hasOwnProperty to filter out keys from the Object.prototype
-//     if (h.hasOwnProperty(k)) {
-//         alert('key is: ' + k + ', value is: ' + h[k]);
-//     }
-// }
