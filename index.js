@@ -23,7 +23,11 @@ bot.onText(/\/start/, (msg, match) => {
     let id = chatId.toString().replace('-', '');
     // tableName += chatId;
     console.log(tableName + id);
-    db.createTable(tableName + id);
+    try {
+        db.createTable(tableName + id);
+    } catch (e) {
+        console.log(e);
+    }
     bot.sendMessage(chatId, "Hello");
 });
 
@@ -34,13 +38,12 @@ bot.onText(/\/[a-z]*falta[a-z]* (.+)/, add);
 
 
 function addProduct(chatId, items) {
+    // this fuction checks that item is not already added to the list
     return function(err, data) {
         const a = [];
         for( let i in items ) {
             let item = items[i];
-            if (err) {
-                throw err;
-            }
+            if (err) throw err;
             b = [];
             for( let i in data ) {
                 b.push(data[i].name);
@@ -84,14 +87,22 @@ function add(msg, match) {
         items = removeDuplicates(items);
 
         db.getList(tableName + chatId.toString().replace('-', ''), addProduct(chatId, items));
+    } else {
+        bot.sendMessage('No product specified');
     }
 }
 
 
 function removeAll(msg) {
     const chatId = msg.chat.id;
-    db.dropTable(tableName + chatId.toString().replace('-', ''));
-    db.createTable(tableName + chatId.toString().replace('-', ''));
+    // db.dropTable(tableName + chatId.toString().replace('-', ''));
+    const newTableName = tableName + chatId.toString().replace('-', '');
+    db.dropTable(newTableName)
+        .then(() => {
+            db.createTable(newTableName);
+        })
+        .catch((e)  => console.log(e));
+    // db.createTable(tableName + chatId.toString().replace('-', ''));
     // bot.sendMessage(chatId, 'Lista vaciada');
     bot.sendMessage(chatId, 'List emptied');
 }
