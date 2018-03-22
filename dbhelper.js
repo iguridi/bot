@@ -44,20 +44,35 @@ class Db {
 
 
     insert(tableName, item) {
-        const client = newClient();
-        console.log(item);
-        client.query('INSERT INTO ' + tableName + '(name) VALUES($1)', [item],
-            (err, res) => {
-                if (err) throw err;
-                console.log(item + ' inserted');
-                client.end();
-            }
-        );
+        return new Promise((resolve, reject) => {
+            const client = newClient();
+            console.log(item);
+            client.query('INSERT INTO ' + tableName + '(name) VALUES($1)', [item],
+                (err, res) => {
+                    if (err) reject(err);
+                    console.log(item + ' inserted');
+                    client.end();
+                    resolve('cool');
+                }
+            );
+        });
+        
     }
 
     delete(tableName, item) {
-        aca vot my friend. 
-        
+        // aca vot my friend. 
+        return new Promise((resolve, reject) => {
+            const client = newClient();
+            console.log(item);
+            client.query("DELETE FROM " + tableName + " WHERE name=($1);", [item],
+                (err, res) => {
+                    if (err) reject(err);
+                    console.log(item + ' deleted');
+                    client.end();
+                    resolve('cool');
+                }
+            );
+        });
         // // console.log(tableName, item);
         // let query = "DELETE FROM " + tableName + " WHERE name=?;";
         // console.log(query);

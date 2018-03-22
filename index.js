@@ -33,6 +33,10 @@ bot.onText(/\/start/, (msg, match) => {
 
 
 // Matches "/add [whatever]"
+bot.onText(/\/add^(?!.).*/, msg => { 
+    const chatId = msg.chat.id;
+    bot.sendMessage(chatId, 'No product specified');
+});
 bot.onText(/\/add (.+)/, add);
 bot.onText(/\/[a-z]*falta[a-z]* (.+)/, add);
 
@@ -81,15 +85,17 @@ function add(msg, match) {
     // of the message
     
     const chatId = msg.chat.id;
+    console.log(match, 'acaaa');
     if( match[1] !== undefined ) {
         // here we handle the word format
         let items = match[1].split(',').map((s) => s.trim().toLowerCase());        
         items = removeDuplicates(items);
 
         db.getList(tableName + chatId.toString().replace('-', ''), addProduct(chatId, items));
-    } else {
-        bot.sendMessage('No product specified');
-    }
+    } 
+    // else {
+    //     bot.sendMessage('No product specified');
+    // }
 }
 
 
