@@ -1,7 +1,6 @@
 /*jshint esversion: 6 */
 
 
-// import { WSAEPROCLIM } from 'constants'; esto noseé porqué está acá
 const pg = require('pg');
 
 function newClient() {
@@ -60,7 +59,6 @@ class Db {
     }
 
     delete(tableName, item) {
-        // aca vot my friend. 
         return new Promise((resolve, reject) => {
             const client = newClient();
             console.log(item);
@@ -73,17 +71,6 @@ class Db {
                 }
             );
         });
-        // // console.log(tableName, item);
-        // let query = "DELETE FROM " + tableName + " WHERE name=?;";
-        // console.log(query);
-        // // query = "DELETE FROM list313130684 WHERE name = 'huevos';"
-        // this.db.run(query, [item], function(err) {
-        //         console.log('shiet2');                
-        //         if (err) {
-        //             throw err;
-        //             // return console.log(err.message);
-        //     }
-        // });
     }
 
     getList(tableName, callback) {

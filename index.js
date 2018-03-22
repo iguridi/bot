@@ -18,16 +18,12 @@ var tableName = 'list';
 /* 
 start
 */
-bot.onText(/\/start/, (msg, match) => {
+bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
     let id = chatId.toString().replace('-', '');
     // tableName += chatId;
     console.log(tableName + id);
-    try {
-        db.createTable(tableName + id);
-    } catch (e) {
-        console.log(e);
-    }
+    db.createTable(tableName + id);
     bot.sendMessage(chatId, "Hello");
 });
 
@@ -85,7 +81,6 @@ function add(msg, match) {
     // of the message
     
     const chatId = msg.chat.id;
-    console.log(match, 'acaaa');
     if( match[1] !== undefined ) {
         // here we handle the word format
         let items = match[1].split(',').map((s) => s.trim().toLowerCase());        
