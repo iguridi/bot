@@ -8,6 +8,7 @@ let db = new Db();
 let tokenBot = '';
 try {
     const config = require('./config');
+    tokenBot = config.BOT_TOKEN;
 } catch(e) {}
 
 
