@@ -5,12 +5,15 @@ process.env.NTBA_FIX_319 = 1;
 const TelegramBot = require('node-telegram-bot-api');
 const Db = require('./dbhelper');
 let db = new Db();
-const config = require('./config');
+let tokenBot = '';
+try {
+    const config = require('./config');
+} catch(e) {}
 
 
 
 // Be sure to replace YOUR_BOT_TOKEN with your actual bot token on this line.
-bot = new TelegramBot(config.BOT_TOKEN, { polling: true });
+bot = new TelegramBot(process.env.TOKEN_BOT || tokenBot, { polling: true });
 
 var tableName = 'list';
 // db.open();
