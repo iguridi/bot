@@ -33,7 +33,7 @@ bot.onText(/\/start/, (msg) => {
 
 
 // Matches "/add [whatever]"
-bot.onText(/\/add^(?!.).*/, msg => { 
+bot.onText(/\/add^(?! ).*/, msg => { 
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, 'No product specified');
 });
