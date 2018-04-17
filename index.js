@@ -134,9 +134,12 @@ bot.onText(/\/borrar (.*)/, remove);
 function sendList(chatId) {
     db.getList(tableName + chatId.toString().replace('-', '')) 
         .then(list => {
-            let resp = "<b>List</b>\n - ";
+            let resp = '<b>List</b>\n';
+            if( !list ) {
+                resp += '-  '
+            }
             for( let i in list ) {
-                resp += capitalizeFirstLetter(list[i].name) + "\n - ";
+                resp += '-  ' + capitalizeFirstLetter(list[i].name) + '\n';
             }
             bot.sendMessage(chatId, resp, {parse_mode: "HTML"});
         })
