@@ -12,6 +12,10 @@ try {
 } catch(e) {}
 
 
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 
 // Be sure to replace YOUR_BOT_TOKEN with your actual bot token on this line.
 bot = new TelegramBot(process.env.TOKEN_BOT || tokenBot, { polling: true });
@@ -37,37 +41,30 @@ bot.onText(/\/add[^ ]* *(?!.)/, msg => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, 'No product specified');
 });
-bot.onText(/\/add (.+)/, add);
+bot.onText(/\/add[^ ]* (.+)/, add);
 bot.onText(/\/[a-z]*falta[a-z]* (.+)/, add);
 
 
-function addProduct(chatId, items) {
+function addProduct(chatId, items, list) {
     // this fuction checks that item is not already added to the list
-    return function(err, data) {
-        const a = [];
-        for( let i in items ) {
-            let item = items[i];
-            if (err) throw err;
-            b = [];
-            for( let i in data ) {
-                b.push(data[i].name);
+    const newItems = [];
+    const proms = [];
+    for( let i in items ) {
+        let item = items[i];
+        if ( item ) {
+            const itemNames = [];
+            for( let i in list ) {
+                itemNames.push(list[i].name);
             }
-            console.log(b);
-            if( b.includes(item) ) {
-                // bot.sendMessage(chatId, 'Ya sé que falta(n) ' + item + ', gracias');
-                bot.sendMessage(chatId, 'Product ' + item + ' already added');
-            } else {
-                console.log(tableName, chatId);
-                db.insert(tableName + chatId.toString().replace('-', ''), item);
-                a.push(item);
-                // bot.sendMessage(chatId, 'Product ' +  item  + ' added');
+            if( !itemNames.includes(item) ) {
+                proms.push(db.insert(
+                    tableName + chatId.toString().replace('-', ''), item)
+                        .then(x => newItems.push(item))
+                );
             }
         }
-        if( a.length > 0 ) {
-            // bot.sendMessage(chatId, 'Ya');
-            bot.sendMessage(chatId, 'Product(s) ' +  a.join(', ')  + ' added');
-        }
-    };
+    }
+    Promise.all(proms).then(x => sendList(chatId));
 }
 
 
@@ -79,7 +76,7 @@ function removeDuplicates(list) {
 }
 
 
-function add(msg, match) {
+async function add(msg, match) {
     // 'msg' is the received Message from Telegram
     // 'match' is the result of executing the regexp above on the text content
     // of the message
@@ -90,26 +87,23 @@ function add(msg, match) {
         let items = match[1].split(',').map((s) => s.trim().toLowerCase());        
         items = removeDuplicates(items);
 
-        db.getList(tableName + chatId.toString().replace('-', ''), addProduct(chatId, items));
+        const list = await db.getList(tableName + chatId.toString().replace('-', ''))
+        addProduct(chatId, items, list);
     } 
-    // else {
-    //     bot.sendMessage('No product specified');
-    // }
 }
 
 
-function removeAll(msg) {
+async function removeAll(msg) {
     const chatId = msg.chat.id;
     // db.dropTable(tableName + chatId.toString().replace('-', ''));
-    const newTableName = tableName + chatId.toString().replace('-', '');
-    db.dropTable(newTableName)
-        .then(() => {
-            db.createTable(newTableName);
-        })
-        .catch((e)  => console.log(e));
-    // db.createTable(tableName + chatId.toString().replace('-', ''));
-    // bot.sendMessage(chatId, 'Lista vaciada');
-    bot.sendMessage(chatId, 'List emptied');
+    const tableName2 = tableName + chatId.toString().replace('-', '');
+    try {
+        await db.dropTable(tableName2);
+        await db.createTable(tableName2);
+        sendList(chatId);
+    } catch(e) {
+        console.log(e);
+    }
 }
 
 
@@ -119,20 +113,17 @@ bot.onText(/\/borrartodo/, removeAll);
 
 function remove(msg, match) {
     const chatId = msg.chat.id.toString();
-    // console.log(match[1], 'shit');
-    if (match[1] !== '') {
+    const proms = [];
+    if( match[1] !== '' ) {
         let items = match[1].split(',').map((s) => s.trim().toLowerCase());
-        for (let i in items) {
-            db.delete(tableName + chatId.toString().replace('-', ''), items[i]);
-
+        for( let i in items ) {
+            let item = items[i];
+            proms.push(db.delete(
+                    tableName + chatId.toString().replace('-', ''), item)
+            );
         }
-        // bot.sendMessage(chatId, 'Producto(s) ' + items.join(', ') + ' borrado(s) de la lista');
-        bot.sendMessage(chatId, 'Item(s) ' + items.join(', ') + ' removed');
-    } else {
-        // console.log('No item specified');
-        // bot.sendMessage(chatId, 'Que producto');
-        bot.sendMessage(chatId, 'No item specified');
     }
+    Promise.all(proms).then(x => sendList(chatId));
 
 }
 
@@ -140,33 +131,20 @@ bot.onText(/\/remove (.*)/, remove);
 bot.onText(/\/borrar (.*)/, remove);
 
 
-
-function showList(msg) {
-    return function(err, list) {
-        if (err) {
-            throw err;
-        }
-        // console.log(list, 'lablabla');
-
-        const chatId = msg.chat.id;
-        var resp = "List:\n";
-        // var resp = "List:\n";
-
-        if( list.length === 0 ) {
-            // resp = "Lista vacía";
-            resp = "Empty list";
-        } else {
+function sendList(chatId) {
+    db.getList(tableName + chatId.toString().replace('-', '')) 
+        .then(list => {
+            let resp = "<b>List</b>\n - ";
             for( let i in list ) {
-                resp += "- " + list[i].name + "\n";
+                resp += capitalizeFirstLetter(list[i].name) + "\n - ";
             }
-        }
-        bot.sendMessage(chatId, resp); //, {parse_mode: "HTML"});
-    };
+            bot.sendMessage(chatId, resp, {parse_mode: "HTML"});
+        })
+        .catch(err => console.log(err));
 }
 
 
 bot.onText(/\/list/, (msg) => {
-    const chatId = msg.chat.id;     
-    db.getList(tableName + chatId.toString().replace('-', ''), showList(msg));
+    sendList(msg.chat.id);
 });
 

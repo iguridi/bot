@@ -23,8 +23,8 @@ class Db {
                 if (err) reject("couldn't create table " + tableName);
                 console.log('table ' + tableName + ' created');
                 client.end();
+                resolve('cool');
             }); 
-            resolve('cool');
         });
     }
 
@@ -73,19 +73,19 @@ class Db {
         });
     }
 
-    getList(tableName, callback) {
+    getList(tableName) {
         return new Promise((resolve, reject) => {
             const client = newClient();
             const query = "SELECT name FROM " + tableName;
-            console.log(query, 'blablaa');
+            // console.log(query, 'blablaa');
             client.query(query, (err, res) => {
                 if (err) reject(err);
                 if (res) {
-                    callback(null, res.rows);
+                    // callback(null, res.rows);
+                    resolve(res.rows);
                 } else {
-                    callback(null, []);
+                    resolve([]);
                 }
-                resolve('cool');
                 // console.log('table ' + tableName + ' created');
                 client.end();
             }); 

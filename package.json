@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "eslint": "^4.19.1",
     "jshint": "^2.9.5",
     "node-telegram-bot-api": "^0.30.0",
     "pg": "^6.1.0"
