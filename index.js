@@ -2,6 +2,11 @@
 
 process.env.NTBA_FIX_319 = 1;
 
+
+require("dotenv").config();
+
+// var bot = require('./bot');
+
 const TelegramBot = require('node-telegram-bot-api');
 const Db = require('./dbhelper');
 let db = new Db();
@@ -9,15 +14,37 @@ let tokenBot = '';
 try {
     const config = require('./config');
     tokenBot = config.BOT_TOKEN;
-} catch(e) {}
+} catch(e) {
+    // console.log(e)
+}
+
+// const token = process.env.TOKEN;
+
+// const Bot = require('node-telegram-bot-api');
+// let bot;
+
+// if(process.env.NODE_ENV === 'production') {
+//   bot = new Bot(token);
+//   bot.setWebHook(process.env.HEROKU_URL + bot.token);
+// }
+// else {
+//   bot = new Bot(token, { polling: true });
+// }
+
+// console.log('Bot server started in the ' + process.env.NODE_ENV + ' mode');
+
 
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
+// var port = process.env.PORT || 8443;
+// var host = process.env.HOST;
+// var bot = new TelegramBot(token, {webHook: {port: port, host: host}});
 
 // Be sure to replace YOUR_BOT_TOKEN with your actual bot token on this line.
+// var bot = new TelegramBot(process.env.TOKEN_BOT || tokenBot);
 bot = new TelegramBot(process.env.TOKEN_BOT || tokenBot, { polling: true });
 
 var tableName = 'list';
@@ -41,6 +68,7 @@ bot.onText(/\/add[^ ]* *(?!.)/, msg => {
     const chatId = msg.chat.id;
     bot.sendMessage(chatId, 'No product specified');
 });
+
 bot.onText(/\/add[^ ]* (.+)/, add);
 bot.onText(/\/[a-z]*falta[a-z]* (.+)/, add);
 
@@ -151,3 +179,4 @@ bot.onText(/\/list/, (msg) => {
     sendList(msg.chat.id);
 });
 
+require('./web')(bot);
