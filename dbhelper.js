@@ -13,18 +13,18 @@ function newClient() {
     return client;
 }
 
-class Db { 
-     
+class Db {
+
     createTable(tableName) {
         return new Promise((resolve, reject) => {
             const client = newClient();
             const query = 'CREATE TABLE IF NOT EXISTS ' + tableName + '(name text);';
             client.query(query, (err, res) => {
                 if (err) reject("couldn't create table " + tableName);
-                console.log('table ' + tableName + ' created');
+                ('table ' + tableName + ' created');
                 client.end();
                 resolve('cool');
-            }); 
+            });
         });
     }
 
@@ -33,7 +33,7 @@ class Db {
             const client = newClient();
             client.query('DROP TABLE ' + tableName + ';', (err, res) => {
                 if (err) reject('could not  drop table ' + tableName);
-                console.log('table ' + tableName + ' dropped');
+                ('table ' + tableName + ' dropped');
                 client.end();
                 resolve('cool');
             });
@@ -45,27 +45,27 @@ class Db {
     insert(tableName, item) {
         return new Promise((resolve, reject) => {
             const client = newClient();
-            console.log(item);
+            (item);
             client.query('INSERT INTO ' + tableName + '(name) VALUES($1)', [item],
                 (err, res) => {
                     if (err) reject(err);
-                    console.log(item + ' inserted');
+                    (item + ' inserted');
                     client.end();
                     resolve('cool');
                 }
             );
         });
-        
+
     }
 
     delete(tableName, item) {
         return new Promise((resolve, reject) => {
             const client = newClient();
-            console.log(item);
+            (item);
             client.query("DELETE FROM " + tableName + " WHERE name=($1);", [item],
                 (err, res) => {
                     if (err) reject(err);
-                    console.log(item + ' deleted');
+                    (item + ' deleted');
                     client.end();
                     resolve('cool');
                 }
@@ -77,7 +77,7 @@ class Db {
         return new Promise((resolve, reject) => {
             const client = newClient();
             const query = "SELECT name FROM " + tableName;
-            // console.log(query, 'blablaa');
+            // (query, 'blablaa');
             client.query(query, (err, res) => {
                 if (err) reject(err);
                 if (res) {
@@ -86,9 +86,9 @@ class Db {
                 } else {
                     resolve([]);
                 }
-                // console.log('table ' + tableName + ' created');
+                // ('table ' + tableName + ' created');
                 client.end();
-            }); 
+            });
         });
     }
 
@@ -98,7 +98,7 @@ class Db {
           if (err) {
             return console.error(err.message);
           }
-          console.log('Close the database connection.');
+          ('Close the database connection.');
         });
     }
 }
