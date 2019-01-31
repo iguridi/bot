@@ -68,6 +68,3 @@ package-lock.json
 
 # database
 *.db
-
-# private information
-config.js
