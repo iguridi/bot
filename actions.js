@@ -3,6 +3,13 @@ const {bot, db, kbW} = require('./config');
 const tableName = 'list';
 
 const ik = new kbW.InlineKeyboard();
+const rk = new kbW.ReplyKeyboard();
+rk
+    .addRow('List', 'Add')
+    .addRow("Remove All", "Remove");
+
+let isRKOpen = false;
+
 
 async function addProduct(chatId, items, list) {
     // this fuction checks that item is not already added to the list
@@ -56,6 +63,19 @@ function closeRemove(chat_id, message_id) {
     sendList(chat_id);
 }
 
+bot.on("message", (msg) => {
+    console.log(msg);
+    // if (!hasBotCommands(msg.entities)) {
+    //     if (isRKOpen) {
+    //         bot.sendMessage(msg.from.id, "Good! I'm closing the replyKeyboard.", rk.close());
+    //         isRKOpen = !isRKOpen;
+    //     }
+    //     if (!!msg.reply_to_message) {
+    //         bot.sendMessage(msg.from.id, "Good! ForceReply works!");
+    //     }
+    // }
+});
+
 
 module.exports = {
     start(msg) {
@@ -63,6 +83,10 @@ module.exports = {
         let id = chatId.toString().replace('-', '');
         db.createTable(tableName + id);
         bot.sendMessage(chatId, "Hello");
+        bot.sendMessage(msg.from.id, "Button keyboard activated", rk.open({ resize_keyboard: true, one_time_keyboard: true }))
+        .then(function () {
+        isRKOpen = !isRKOpen;
+    });
     },
 
     addNull(msg) {
@@ -125,7 +149,7 @@ module.exports = {
             const callback_data = name.slice(0, 64);
             ik.addRow({ text: capitalizeFirstLetter(name), callback_data });
         }
-        ik.addRow({ text: 'done', callback_data: 'CLOSE' });
+        ik.addRow({ text: '✔️', callback_data: 'CLOSE' });
         bot.sendMessage(chatId, 'Remove', ik.build());
     },
 

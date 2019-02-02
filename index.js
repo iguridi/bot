@@ -26,3 +26,5 @@ bot.onText(/\/borrar (.*)/, Actions.remove);
 bot.onText(/\/list/, Actions.sendList);
 
 bot.on("callback_query", Actions.removedCallback);
+
+
