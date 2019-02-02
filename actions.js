@@ -125,7 +125,7 @@ module.exports = {
             const callback_data = name.slice(0, 64);
             ik.addRow({ text: capitalizeFirstLetter(name), callback_data });
         }
-        ik.addRow({ text: 'done', callback_data: 'CLOSE' });
+        ik.addRow({ text: '✔️', callback_data: 'CLOSE' });
         bot.sendMessage(chatId, 'Remove', ik.build());
     },
 
