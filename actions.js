@@ -1,20 +1,19 @@
-const {bot, db} = require('./config');
+const {bot, db, kbW} = require('./config');
 
 const tableName = 'list';
 
+const ik = new kbW.InlineKeyboard();
 
 async function addProduct(chatId, items, list) {
     // this fuction checks that item is not already added to the list
     const newItems = [];
     const proms = [];
-    (items, 'cfejk')
     for( let i in items ) {
         let item = items[i];
         if ( !item ) {
             continue;
         }
         const itemNames = list.map((i) => i.name)
-        (itemNames, 'blajbkjhsbc');
         if( !itemNames.includes(item) ) {
             proms.push(db.insert(tableName + chatId.toString().replace('-', ''), item));
             newItems.push(item);
@@ -52,6 +51,12 @@ async function sendList(chatId) {
     }
 }
 
+function closeRemove(chat_id, message_id) {
+    bot.deleteMessage(chat_id, message_id);
+    sendList(chat_id);
+}
+
+
 module.exports = {
     start(msg) {
         const chatId = msg.chat.id;
@@ -74,11 +79,9 @@ module.exports = {
         }
         // here we handle the word format
         let items = match[1].split(',').map((s) => s.trim().toLowerCase());
-        (match[1],'ncdjbnw')
         items = removeDuplicates(items);
 
         const list = await db.getList(tableName + chatId.toString().replace('-', ''))
-        ('nlabla', list)
         addProduct(chatId, items, list);
     },
 
@@ -110,7 +113,42 @@ module.exports = {
         }
         await Promise.all(proms);
         sendList(chatId);
+    },
 
+    async removeNull(msg) {
+        const chatId = msg.chat.id.toString();
+        const list = await db.getList(tableName + chatId.toString().replace('-', ''));
+        ik.reset();
+        for (let i = 0; i < list.length; i++) {
+            const name = list[i].name;
+            ik.addRow({ text: capitalizeFirstLetter(name), callback_data: name });
+        }
+        ik.addRow({ text: 'done', callback_data: 'CLOSE' });
+        bot.sendMessage(chatId, 'Remove', ik.build());
+    },
+
+    removedCallback(query) {
+        const chat_id = query.message.chat.id;
+        const message_id = query.message.message_id;
+        const list = ik.build().reply_markup.inline_keyboard;
+        if (query.data == 'CLOSE') {
+            closeRemove(chat_id, message_id);
+            return;
+        }
+        db.delete(tableName + chat_id.toString().replace('-', ''), query.data);
+        bot.answerCallbackQuery(query.id, { text: capitalizeFirstLetter(query.data) + " removed!" });
+        if (list.length === 2) {
+            // no items left on list
+            closeRemove(chat_id, message_id);
+            return;
+        }
+
+        for (let i = 0; i < list.length; i++) {
+            if (list[i][0].callback_data === query.data) {
+                ik.removeRow(i);
+            }
+        }
+        bot.editMessageReplyMarkup(ik.build().reply_markup, { message_id, chat_id});
     },
 
     sendList(msg){

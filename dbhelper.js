@@ -77,7 +77,6 @@ class Db {
         return new Promise((resolve, reject) => {
             const client = newClient();
             const query = "SELECT name FROM " + tableName;
-            // (query, 'blablaa');
             client.query(query, (err, res) => {
                 if (err) reject(err);
                 if (res) {
@@ -86,7 +85,6 @@ class Db {
                 } else {
                     resolve([]);
                 }
-                // ('table ' + tableName + ' created');
                 client.end();
             });
         });

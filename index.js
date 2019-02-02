@@ -20,7 +20,9 @@ bot.onText(/\/borrartodo/, Actions.removeAll);
 
 
 bot.onText(/\/remove (.*)/, Actions.remove);
+bot.onText(/\/remove[^ ]* *(?!.)/, Actions.removeNull);
 bot.onText(/\/borrar (.*)/, Actions.remove);
 
 bot.onText(/\/list/, Actions.sendList);
 
+bot.on("callback_query", Actions.removedCallback);
