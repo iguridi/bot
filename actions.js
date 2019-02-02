@@ -121,7 +121,9 @@ module.exports = {
         ik.reset();
         for (let i = 0; i < list.length; i++) {
             const name = list[i].name;
-            ik.addRow({ text: capitalizeFirstLetter(name), callback_data: name });
+            // 64 size string limit for callback data
+            const callback_data = name.slice(0, 64);
+            ik.addRow({ text: capitalizeFirstLetter(name), callback_data });
         }
         ik.addRow({ text: 'done', callback_data: 'CLOSE' });
         bot.sendMessage(chatId, 'Remove', ik.build());
