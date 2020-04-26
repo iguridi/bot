@@ -1,8 +1,8 @@
 const { bot, db, kbW } = require('./config')
 
-const tableName = 'list'
+const BASE_TABLE_NAME = 'list'
 
-const ik = new kbW.InlineKeyboard()
+const IK = new kbW.InlineKeyboard()
 
 async function addProduct(chatId, items, list) {
     // this fuction checks that item is not already added to the list
@@ -15,25 +15,15 @@ async function addProduct(chatId, items, list) {
         }
         const itemNames = list.map((i) => i.name)
         if (!itemNames.includes(item)) {
-            proms.push(db.insert(tableName + chatId.toString().replace('-', ''), item))
+            proms.push(db.insert(getTableName(chatId), item))
             newItems.push(item)
         }
     }
     await Promise.all(proms)
-    sendList(chatId)
 }
 
-function removeDuplicates(list) {
-    const seen = {}
-    return list.filter((item) => (seen.hasOwnProperty(item) ? false : (seen[item] = true)))
-}
-
-function capitalizeFirstLetter(string) {
-    return string.charAt(0).toUpperCase() + string.slice(1)
-}
-
-async function sendList(chatId) {
-    const list = await db.getList(tableName + chatId.toString().replace('-', ''))
+const sendList = async (chatId) => {
+    const list = await db.getList(getTableName(chatId))
     try {
         let resp = '<b>List</b>\n'
         if (!list) {
@@ -48,21 +38,33 @@ async function sendList(chatId) {
     }
 }
 
-function closeRemove(chat_id, message_id) {
-    bot.deleteMessage(chat_id, message_id)
-    sendList(chat_id)
+function removeDuplicates(list) {
+    const seen = {}
+    return list.filter((item) => (seen.hasOwnProperty(item) ? false : (seen[item] = true)))
+}
+
+function capitalizeFirstLetter(string) {
+    return string.charAt(0).toUpperCase() + string.slice(1)
+}
+
+const getTableName = (chatId) => BASE_TABLE_NAME + chatId.toString().replace('-', '')
+
+function closeRemove(chatId, messageId) {
+    bot.deleteMessage(chatId, messageId)
+    sendList(chatId)
 }
 
 module.exports = {
     start(msg) {
         const chatId = msg.chat.id
-        let id = chatId.toString().replace('-', '')
-        db.createTable(tableName + id)
+        db.createTable(getTableName(chatId))
+        console.log('New start ' + chatId)
         bot.sendMessage(chatId, 'Hello')
     },
 
     addNull(msg) {
         const chatId = msg.chat.id
+        console.log('"Add" command with no product specified')
         bot.sendMessage(chatId, 'No product specified')
     },
 
@@ -77,20 +79,23 @@ module.exports = {
         let items = match[1].split(',').map((s) => s.trim().toLowerCase())
         items = removeDuplicates(items)
 
-        const list = await db.getList(tableName + chatId.toString().replace('-', ''))
-        addProduct(chatId, items, list)
+        const list = await db.getList(getTableName(chatId))
+        console.log(`Add "${items}" from ${chatId}`)
+        await addProduct(chatId, items, list)
+        sendList(chatId)
     },
 
     async removeAll(msg) {
         const chatId = msg.chat.id
-        // db.dropTable(tableName + chatId.toString().replace('-', ''));
-        const tableName2 = tableName + chatId.toString().replace('-', '')
+        const tableName = getTableName(chatId)
         try {
-            await db.dropTable(tableName2)
-            await db.createTable(tableName2)
+            console.log(`Reset table "${tableName}"`)
+            await db.dropTable(tableName)
+            await db.createTable(tableName)
+
             sendList(chatId)
         } catch (e) {
-            e
+            console.log(`Problem when reseting table ${tableName}`)
         }
     },
 
@@ -100,54 +105,67 @@ module.exports = {
         if (match[1] === '') {
             return
         }
+        const tableName = getTableName(chatId)
         const items = match[1].split(',').map((s) => s.trim().toLowerCase())
+        console.log(`Remove "${items}" from ${tableName}`)
         for (let i in items) {
             let item = items[i]
-            proms.push(db.delete(tableName + chatId.toString().replace('-', ''), item))
+            proms.push(db.delete(tableName, item))
         }
         await Promise.all(proms)
         sendList(chatId)
     },
 
-    async removeNull(msg) {
+    async showListToRemove(msg) {
         const chatId = msg.chat.id.toString()
-        const list = await db.getList(tableName + chatId.toString().replace('-', ''))
-        ik.reset()
+        console.log(`Show list to remove products ${chatId}`)
+        const list = await db.getList(getTableName(chatId))
+        IK.reset()
         for (let i = 0; i < list.length; i++) {
             const name = list[i].name
             // 64 size string limit for callback data
             const callback_data = name.slice(0, 64)
-            ik.addRow({ text: capitalizeFirstLetter(name), callback_data })
+            IK.addRow({ text: capitalizeFirstLetter(name), callback_data })
         }
-        ik.addRow({ text: '✔️', callback_data: 'CLOSE' })
-        bot.sendMessage(chatId, 'Remove', ik.build())
+        IK.addRow({ text: '✔️', callback_data: 'CLOSE' })
+
+        bot.sendMessage(chatId, 'Remove', IK.build())
     },
 
     removedCallback(query) {
-        const chat_id = query.message.chat.id
-        const message_id = query.message.message_id
-        const list = ik.build().reply_markup.inline_keyboard
+        const chatId = query.message.chat.id
+        const messageId = query.message.message_id
+        const list = IK.build().reply_markup.inline_keyboard
         if (query.data == 'CLOSE') {
-            closeRemove(chat_id, message_id)
+            console.log(`Closing remove list from ${chatId}`)
+            closeRemove(chatId, messageId)
             return
         }
-        db.delete(tableName + chat_id.toString().replace('-', ''), query.data)
+        console.log(query, 'askjbf')
+        const tableName = getTableName(chatId)
+        console.log(`Remove "${query.data}" from ${tableName} via buttons`)
+        db.delete(tableName, query.data)
         bot.answerCallbackQuery(query.id, { text: capitalizeFirstLetter(query.data) + ' removed!' })
         if (list.length === 2) {
             // no items left on list
-            closeRemove(chat_id, message_id)
+            closeRemove(chatId, messageId)
             return
         }
 
         for (let i = 0; i < list.length; i++) {
             if (list[i][0].callback_data === query.data) {
-                ik.removeRow(i)
+                IK.removeRow(i)
             }
         }
-        bot.editMessageReplyMarkup(ik.build().reply_markup, { message_id, chat_id })
+        bot.editMessageReplyMarkup(IK.build().reply_markup, {
+            message_id: messageId,
+            chat_id: chatId,
+        })
     },
 
     sendList(msg) {
-        sendList(msg.chat.id)
+        const chatId = msg.chat.id
+        console.log(`Show list of ${chatId}`)
+        sendList(chatId)
     },
 }
