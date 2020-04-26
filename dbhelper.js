@@ -16,9 +16,9 @@ class Db {
     createTable(tableName) {
         return new Promise((resolve, reject) => {
             const client = newClient()
-            const query = 'CREATE TABLE IF NOT EXISTS ' + tableName + '(name text);'
+            const query = `CREATE TABLE IF NOT EXISTS ${tableName}(name text);`
             client.query(query, (err, res) => {
-                if (err) reject("couldn't create table " + tableName)
+                if (err) reject(`couldn't create table ${tableName}`)
                 'table ' + tableName + ' created'
                 client.end()
                 resolve('cool')
@@ -29,8 +29,8 @@ class Db {
     dropTable(tableName) {
         return new Promise((resolve, reject) => {
             const client = newClient()
-            client.query('DROP TABLE ' + tableName + ';', (err, res) => {
-                if (err) reject('could not  drop table ' + tableName)
+            client.query(`DROP TABLE ${tableName};`, (err, res) => {
+                if (err) reject(`could not  drop table ${tableName}`)
                 'table ' + tableName + ' dropped'
                 client.end()
                 resolve('cool')
@@ -42,7 +42,7 @@ class Db {
         return new Promise((resolve, reject) => {
             const client = newClient()
             item
-            client.query('INSERT INTO ' + tableName + '(name) VALUES($1)', [item], (err, res) => {
+            client.query(`INSERT INTO ${tableName}(name) VALUES($1)`, [item], (err, res) => {
                 if (err) reject(err)
                 item + ' inserted'
                 client.end()
@@ -55,7 +55,7 @@ class Db {
         return new Promise((resolve, reject) => {
             const client = newClient()
             item
-            client.query('DELETE FROM ' + tableName + ' WHERE name=($1);', [item], (err, res) => {
+            client.query(`DELETE FROM ${tableName} WHERE name=($1);`, [item], (err, res) => {
                 if (err) reject(err)
                 item + ' deleted'
                 client.end()
@@ -67,7 +67,7 @@ class Db {
     getList(tableName) {
         return new Promise((resolve, reject) => {
             const client = newClient()
-            const query = 'SELECT name FROM ' + tableName
+            const query = `SELECT name FROM ${tableName} ORDER BY name ASC`
             client.query(query, (err, res) => {
                 if (err) {
                     reject(err)
@@ -79,16 +79,6 @@ class Db {
                 }
                 client.end()
             })
-        })
-    }
-
-    // close the database connection
-    close() {
-        db.close((err) => {
-            if (err) {
-                return console.error(err.message)
-            }
-            ;('Close the database connection.')
         })
     }
 }
