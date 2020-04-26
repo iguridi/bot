@@ -4,19 +4,27 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
-  "author": "",
+  "author": "iguridi <iguridi@uc.cl>",
   "license": "ISC",
   "dependencies": {
     "dotenv": "^6.2.0",
-    "eslint": "^4.19.1",
-    "jshint": "^2.9.5",
     "node-telegram-bot-api": "^0.30.0",
     "node-telegram-keyboard-wrapper": "^2.0.1",
     "pg": "^6.1.0"
   },
   "engines": {
-    "node": "8.10.0"
+    "node": "13.13.0"
+  },
+  "repository": "https://github.com/iguridi/simple-list-telegrambot.git",
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-prettier": "^3.1.3",
+    "jshint": "^2.11.0",
+    "prettier": "^2.0.5"
   }
 }

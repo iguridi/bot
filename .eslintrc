@@ -1,0 +1,48 @@
+{
+    "extends": [
+        "prettier"
+    ],
+    "plugins": [
+        "prettier"
+    ],
+    "rules": {
+        "prettier/prettier": [
+            "error"
+        ],
+        "class-methods-use-this": "error",
+        "semi": [
+            "error",
+            "never"
+        ],
+        "prefer-destructuring": "warn",
+        "no-use-before-define": "off",
+        "react/button-has-type": "off",
+        "react/jsx-wrap-multilines": "off",
+        "react/jsx-closing-bracket-location": "off",
+        "import/prefer-default-export": "off",
+        "jsx-a11y/label-has-for": "off",
+        "jsx-a11y/label-has-associated-control": "off",
+        "indent": "off",
+        "react/jsx-indent": "off",
+        "react/jsx-indent-props": "off",
+        "react/jsx-filename-extension": [
+            1,
+            {
+                "extensions": [
+                    ".js",
+                    ".jsx"
+                ]
+            }
+        ]
+    },
+    "globals": {
+        "window": true,
+        "document": true,
+        "localStorage": true,
+        "FormData": true,
+        "FileReader": true,
+        "Blob": true,
+        "navigator": true,
+        "fetch": true
+    }
+}
