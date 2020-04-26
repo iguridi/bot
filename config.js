@@ -24,7 +24,8 @@ const options = {
     },
 }
 
-const bot = new TelegramBot(process.env.TOKEN_BOT, options[ENV])
+const token = process.env.TOKEN_BOT
+const bot = new TelegramBot(token, options[ENV])
 
 if (ENV === 'production') {
     // Heroku routes from port :443 to $PORT
@@ -32,7 +33,7 @@ if (ENV === 'production') {
     // to get this automatically (it was enabled on 26/05/2020)
     // See: https://devcenter.heroku.com/articles/dyno-metadata
     const url = process.env.APP_URL || 'https://<app-name>.herokuapp.com:443'
-    bot.setWebHook(`${url}/bot${TOKEN}`)
+    bot.setWebHook(`${url}/bot${token}`)
 }
 
 module.exports = {
